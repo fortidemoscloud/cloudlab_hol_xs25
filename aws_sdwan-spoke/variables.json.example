@@ -4,3 +4,5 @@
     "hubs_secret_id": "xxxx-x0c5xw-hubs",
     "hubs": "[{\"id\": \"hub1\", \"vpn_psk\": \"xxxxxx\", \"hub_ip\": \"172.20.0.1\", \"bgp_asn\": \"65000\", \"hck_ip\": \"172.20.0.1\", \"cidr\": \"10.0.0.0/8\"}]"
 }
+
+{"fgt_build": "build2795", "license_type": "payg"}

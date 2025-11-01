@@ -63,7 +63,7 @@ spec:
   - protocol: TCP
     port: 3001
     targetPort: 3001
-    nodePort: ${node_port}
+    nodePort: ${nodeport}
   type: NodePort
 ---
 apiVersion: v1
