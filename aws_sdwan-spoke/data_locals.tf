@@ -18,7 +18,7 @@ locals {
   custom_vars_merged = {
     region                     = try(local.custom_vars_parsed.region, "eu-west-1")
     number_azs                 = try(local.custom_vars_parsed.number_azs, 1)
-    fgt_build                  = try(local.custom_vars_parsed.fgt_build, "build2731")
+    fgt_build                  = try(local.custom_vars_parsed.fgt_build, "build2829")
     license_type               = try(local.custom_vars_parsed.license_type, "payg")
     fortiflex_tokens           = try(jsondecode(local.custom_vars_parsed.fortiflex_tokens), [])
     fgt_size                   = try(local.custom_vars_parsed.fgt_size, "c6i.large")
@@ -77,12 +77,14 @@ locals {
     api_host = "${module.fgt.fgt["az1.fgt1"]["fgt_public"]}:8443"
     api_key  = module.fgt.api_key
   }
-  o_k8s = {
-    public_ip    = module.k8s.vm["public_ip"]
-    adminuser    = module.k8s.vm["adminuser"]
-    app_dvwa_url = "http://${module.k8s.vm["public_ip"]}:31000"
-    app_api_url  = "http://${module.k8s.vm["public_ip"]}:31001"
-  }
-  ssh_key_pem_secret_id = "${var.prefix}-ssh-key-pem"
+  
+  app_node_port = "31000"
 
+  o_k8s = {
+    public_ip   = module.k8s.vm["public_ip"]
+    adminuser   = module.k8s.vm["adminuser"]
+    app_url     = "http://${module.k8s.vm["public_ip"]}:${local.app_node_port}"
+  }
+  
+  ssh_key_pem_secret_id = "${var.prefix}-ssh-key-pem"
 }

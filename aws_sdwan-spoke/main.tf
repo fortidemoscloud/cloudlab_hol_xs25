@@ -51,7 +51,7 @@ module "k8s" {
 locals {
   # K8S configuration and APP deployment
   k8s_deployment = templatefile("./templates/voteapp.yaml.tp", {
-    nodeport = "31000"
+    nodeport = local.app_node_port
     }
   )
   k8s_user_data = templatefile("./templates/k8s.sh.tp", {
