@@ -1,0 +1,5 @@
+{
+   "fgt": "{ \"api_key\": \"gXF4foTZM9ZMehe04uoPRQhTXCwZnI\", \"fgt_1_mgmt\": \"35.242.130.60:8443\" }",
+   "vips": "{ \"vip1\": { \"mappedip\": \"192.168.1.74\", \"extport\": \"31000\", \"mappedport\": \"31000\"} }",
+   "fgt_secret_id": "sdwan-spoke-fgt"
+}
