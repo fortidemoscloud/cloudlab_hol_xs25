@@ -82,6 +82,7 @@ locals {
 
   o_k8s = {
     public_ip   = module.k8s.vm["public_ip"]
+    private_ip  = module.k8s.vm["private_ip"]
     adminuser   = module.k8s.vm["adminuser"]
     app_url     = "http://${module.k8s.vm["public_ip"]}:${local.app_node_port}"
   }
