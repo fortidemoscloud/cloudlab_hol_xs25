@@ -14,23 +14,29 @@ locals {
   # Parse the custom_vars variable from JSON string to an object
   custom_vars_parsed = jsondecode(var.custom_vars)
 
+  # Parse fortiflex_tokens from string to list
+  fortiflex_tokens_str_0 = lookup(local.custom_vars_parsed, "fortiflex_tokens", "[]")
+  fortiflex_tokens_str_1 = replace(replace(local.fortiflex_tokens_str_0, "[", ""), "]", "")
+  fortiflex_tokens_list = split(",", local.fortiflex_tokens_str_1)
+  fortiflex_tokens = [for t in local.fortiflex_tokens_list : trimspace(t) if trimspace(t) != ""]
+
   # Create a merged custom_vars with defaults for any missing values
   custom_vars_merged = {
     region                     = try(local.custom_vars_parsed.region, "eu-west-1")
     number_azs                 = try(local.custom_vars_parsed.number_azs, 1)
     fgt_build                  = try(local.custom_vars_parsed.fgt_build, "build2829")
     license_type               = try(local.custom_vars_parsed.license_type, "payg")
-    fortiflex_tokens           = try(jsondecode(local.custom_vars_parsed.fortiflex_tokens), [])
+    fortiflex_tokens           = try(local.fortiflex_tokens, [])
     fgt_size                   = try(local.custom_vars_parsed.fgt_size, "c6i.large")
     fgt_number_peer_az         = try(local.custom_vars_parsed.fgt_number_peer_az, 1)
     fgt_cluster_type           = try(local.custom_vars_parsed.fgt_cluster_type, "fgsp")
     fgt_vpc_cidr               = try(local.spoke_parsed.cidr, local.custom_vars_parsed.fgt_vpc_cidr, "192.168.1.0/24")
-    public_subnet_names_extra  = try(jsondecode(local.custom_vars_parsed.public_subnet_names_extra), ["bastion"])
-    private_subnet_names_extra = try(jsondecode(local.custom_vars_parsed.private_subnet_names_extra), ["protected"])
+    public_subnet_names_extra  = try(local.custom_vars_parsed.public_subnet_names_extra, ["bastion"])
+    private_subnet_names_extra = try(local.custom_vars_parsed.private_subnet_names_extra, [""])
     k8s_size                   = try(local.custom_vars_parsed.k8s_size, "t3.2xlarge")
     k8s_version                = try(local.custom_vars_parsed.k8s_version, "1.31")
     gcp_secrets_region         = try(local.custom_vars_parsed.gcp_secrets_region, "europe-west2")
-    tags                       = try(jsondecode(local.custom_vars_parsed.tags), { "Deploy" = "CloudLab AWS", "Project" = "CloudLab" })
+    tags                       = try(local.custom_vars_parsed.tags, { "Deploy" = "CloudLab AWS", "Project" = "CloudLab" })
   }
 
   # Parse the hubs variable from JSON string to a list of maps
