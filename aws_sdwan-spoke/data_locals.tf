@@ -17,8 +17,8 @@ locals {
   # Parse fortiflex_tokens from string to list
   fortiflex_tokens_str_0 = lookup(local.custom_vars_parsed, "fortiflex_tokens", "[]")
   fortiflex_tokens_str_1 = replace(replace(local.fortiflex_tokens_str_0, "[", ""), "]", "")
-  fortiflex_tokens_list = split(",", local.fortiflex_tokens_str_1)
-  fortiflex_tokens = [for t in local.fortiflex_tokens_list : trimspace(t) if trimspace(t) != ""]
+  fortiflex_tokens_list  = split(",", local.fortiflex_tokens_str_1)
+  fortiflex_tokens       = [for t in local.fortiflex_tokens_list : trimspace(t) if trimspace(t) != ""]
 
   # Create a merged custom_vars with defaults for any missing values
   custom_vars_merged = {
@@ -83,15 +83,15 @@ locals {
     api_host = "${module.fgt.fgt["az1.fgt1"]["fgt_public"]}:8443"
     api_key  = module.fgt.api_key
   }
-  
+
   app_node_port = "31000"
 
   o_k8s = {
-    public_ip   = module.k8s.vm["public_ip"]
-    private_ip  = module.k8s.vm["private_ip"]
-    adminuser   = module.k8s.vm["adminuser"]
-    app_url     = "http://${module.k8s.vm["public_ip"]}:${local.app_node_port}"
+    public_ip  = module.k8s.vm["public_ip"]
+    private_ip = module.k8s.vm["private_ip"]
+    adminuser  = module.k8s.vm["adminuser"]
+    app_url    = "http://${module.k8s.vm["public_ip"]}:${local.app_node_port}"
   }
-  
+
   ssh_key_pem_secret_id = "${var.prefix}-ssh-key-pem"
 }

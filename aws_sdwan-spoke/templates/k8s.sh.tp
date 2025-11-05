@@ -9,6 +9,7 @@
 K8S_VERSION="v${k8s_version}"
 LINUX_USER="${linux_user}"
 K8S_SA_NAME="cicd-access"
+API_CERT_EXTRA_SANS="${api_cert_extra_sans}"
 
 #--------------------------------------------------------------------------------------------------------------
 # Install K8S (master node)
@@ -60,7 +61,7 @@ kubeadm config images pull
 # Initialize the Kubernetes cluster
 kubeadm init \
     --pod-network-cidr=192.168.0.0/16 \
-    --apiserver-cert-extra-sans=127.0.0.1
+    --apiserver-cert-extra-sans=127.0.0.1,$API_CERT_EXTRA_SANS \
    #--skip-phases=addon/kube-proxy
 
 # Export KUBECONFIG for linux_user

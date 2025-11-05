@@ -11,6 +11,10 @@ output "ssh_key_pem_secret_id" {
   value     = local.ssh_key_pem_secret_id
 }
 
+output "fgt_api_key" {
+  value = module.fgt.api_key
+}
+
 output "k8s" {
   value = local.o_k8s
 }
