@@ -101,10 +101,6 @@ kubectl create clusterrolebinding $K8S_SA_NAME --clusterrole cluster-admin --ser
 #--------------------------------------------------------------------------------------------------------------
 # Deploy applications
 #--------------------------------------------------------------------------------------------------------------
-#cat << EOF > app-deployment.yaml
-#${k8s_deployment}
-#EOF
-#kubectl apply -f app-deployment.yaml
 
 #--------------------------------------------------------------------------------------------------------------
 # Disable Ubuntu OCI iptables default
