@@ -58,7 +58,7 @@ locals {
   k8s_user_data = templatefile("./templates/k8s.sh.tp", {
     k8s_version         = local.custom_vars_merged["k8s_version"]
     linux_user          = "ubuntu"
-    k8s_deployment      = local.k8s_deployment
+    k8s_deployment      = local.k8s_deployment # (don't deployed in this update)
     api_cert_extra_sans = module.fgt.fgt["az1.fgt1"]["fgt_public"]
     }
   )
