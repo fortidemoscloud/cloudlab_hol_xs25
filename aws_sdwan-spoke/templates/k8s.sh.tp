@@ -1,122 +1,84 @@
 #!/bin/bash
-# -------------------------------------------------------------------------------------------------------------
-# User-data script to configure a K8S node master and populate parameters
-#
-# jvigueras@fortinet.com
-# -------------------------------------------------------------------------------------------------------------
+set -e
 
 # Variables
-K8S_VERSION="v${k8s_version}"
-LINUX_USER="${linux_user}"
-K8S_SA_NAME="cicd-access"
 API_CERT_EXTRA_SANS="${api_cert_extra_sans}"
 
-#--------------------------------------------------------------------------------------------------------------
-# Install K8S (master node)
-#--------------------------------------------------------------------------------------------------------------
-# Install Kubernetes
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://pkgs.k8s.io/core:/stable:/$K8S_VERSION/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$K8S_VERSION/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-apt update -y
-apt install -y kubeadm kubelet kubectl
+echo "=== Kubernetes 1.33 Single Node Bootstrap ==="
 
-apt install -y watch ipset tcpdump
-          
-cat <<EOF | tee /etc/modules-load.d/containerd.conf
-overlay
-br_netfilter
-EOF
+# Update system
+apt-get update
+apt-get upgrade -y
 
+# Install required packages
+apt-get install -y curl gnupg2 software-properties-common apt-transport-https ca-certificates
+
+# Disable swap
+swapoff -a
+sed -i '/ swap / s/^/#/' /etc/fstab
+
+# Load kernel modules
 modprobe overlay
 modprobe br_netfilter
 
-# Setup required sysctl params, these persist across reboots.
-cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
-net.bridge.bridge-nf-call-iptables  = 1
-net.ipv4.ip_forward                 = 1
+# Configure sysctl
+cat <<EOF > /etc/sysctl.d/99-kubernetes.conf
+net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward = 1
 EOF
-
-# Apply sysctl params without reboot
 sysctl --system
 
 # Install containerd
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update -y
+apt-get update
 apt-get install -y containerd.io
 
 # Configure containerd
-mkdir -p /etc/containerd
-containerd config default | tee /etc/containerd/config.toml
-sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
-
-# Restart containerd
+containerd config default | tee /etc/containerd/config.toml > /dev/null
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+systemctl daemon-reload
+systemctl enable containerd
 systemctl restart containerd
-swapoff -a
-kubeadm config images pull
 
-# Initialize the Kubernetes cluster
-kubeadm init \
-    --pod-network-cidr=192.168.0.0/16 \
-    --apiserver-cert-extra-sans=127.0.0.1,$API_CERT_EXTRA_SANS \
-   #--skip-phases=addon/kube-proxy
+# Install kubeadm, kubelet, kubectl v1.33
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+apt-get update
+apt-get install -y kubeadm=1.33.* kubelet=1.33.* kubectl=1.33.*
+apt-mark hold kubeadm kubelet kubectl
 
-# Export KUBECONFIG for linux_user
-mkdir -p /home/$LINUX_USER/.kube
-cp -i /etc/kubernetes/admin.conf /home/$LINUX_USER/.kube/config
-chown $LINUX_USER /home/$LINUX_USER/.kube/config
+# Start kubelet
+systemctl daemon-reload
+systemctl enable kubelet
+systemctl start kubelet
 
-# Export KUBECONFIG for root user
-export KUBECONFIG="/etc/kubernetes/admin.conf"
+# Initialize cluster
+kubeadm init --pod-network-cidr=10.244.0.0/16 \
+--skip-token-print \
+--apiserver-cert-extra-sans=127.0.0.1,$API_CERT_EXTRA_SANS
 
-# Install Calico
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.5/manifests/tigera-operator.yaml
-curl https://raw.githubusercontent.com/projectcalico/calico/v3.24.5/manifests/custom-resources.yaml -O
-sed -i 's/encapsulation: VXLANCrossSubnet/encapsulation: VXLAN/g' custom-resources.yaml
-kubectl apply -f ./custom-resources.yaml
+# Setup kubeconfig for root
+mkdir -p /root/.kube
+cp /etc/kubernetes/admin.conf /root/.kube/config
+chown root:root /root/.kube/config
 
-#--------------------------------------------------------------------------------------------------------------
-# Create a service account and secret with a permanent cluster token
-#--------------------------------------------------------------------------------------------------------------
-kubectl create sa $K8S_SA_NAME -n default
+# Setup kubeconfig for ubuntu user
+mkdir -p /home/ubuntu/.kube
+cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+chown ubuntu:ubuntu /home/ubuntu/.kube/config
 
-# Create non expiring SA token
-cat << EOF > new-sa.yaml
-apiVersion: v1
-kind: Secret
-type: kubernetes.io/service-account-token
-metadata:
-  name: $K8S_SA_NAME
-  annotations:
-    kubernetes.io/service-account.name: $K8S_SA_NAME
-EOF
-kubectl apply -f new-sa.yaml
+# Remove master taint so pods can schedule on this node
+kubectl --kubeconfig=/etc/kubernetes/admin.conf taint nodes --all node-role.kubernetes.io/control-plane-
 
-# Create a ClusterRoleBinding for the service account
-kubectl create clusterrolebinding $K8S_SA_NAME --clusterrole cluster-admin --serviceaccount default:$K8S_SA_NAME
+# Install Flannel CNI
+kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
-#--------------------------------------------------------------------------------------------------------------
-# Deploy applications
-#--------------------------------------------------------------------------------------------------------------
-cat << EOF > app-deployment.yaml
-${k8s_deployment}
-EOF
-kubectl apply -f app-deployment.yaml
-
-#--------------------------------------------------------------------------------------------------------------
-# Disable Ubuntu OCI iptables default
-#--------------------------------------------------------------------------------------------------------------
-iptables -F
-netfilter-persistent save
-
-#--------------------------------------------------------------------------------------------------------------
-# Remove taints in master node
-#--------------------------------------------------------------------------------------------------------------
-kubectl taint node --all node-role.kubernetes.io/master-
-kubectl taint node --all node-role.kubernetes.io/control-plane-
+echo "=== Kubernetes cluster ready ==="
+echo "kubeconfig copied to /home/ubuntu/.kube/config"
+echo "User ubuntu can now run: kubectl get nodes"
 
 #--------------------------------------------------------------------------------------------------------------
 # Set TimeZone

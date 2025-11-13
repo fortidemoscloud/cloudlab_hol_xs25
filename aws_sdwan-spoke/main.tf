@@ -34,8 +34,7 @@ module "fgt" {
 # - Two applications deployed
 #--------------------------------------------------------------------------------------------------------------
 module "k8s" {
-  source  = "jmvigueras/ftnt-aws-modules/aws//modules/vm"
-  version = "1.0.4"
+  source  = "./modules/vm"
 
   prefix        = var.prefix
   keypair       = module.fgt.keypair_name
@@ -49,16 +48,7 @@ module "k8s" {
 }
 
 locals {
-  # K8S configuration and APP deployment
-  k8s_deployment = templatefile("./templates/voteapp.yaml.tp", {
-    nodeport      = local.app_node_port
-    vote_question = "Do you enjoy automation with Fortinet?"
-    }
-  )
   k8s_user_data = templatefile("./templates/k8s.sh.tp", {
-    k8s_version         = local.custom_vars_merged["k8s_version"]
-    linux_user          = "ubuntu"
-    k8s_deployment      = local.k8s_deployment
     api_cert_extra_sans = module.fgt.fgt["az1.fgt1"]["fgt_public"]
     }
   )

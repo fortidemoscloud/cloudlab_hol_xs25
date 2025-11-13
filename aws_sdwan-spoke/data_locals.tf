@@ -34,7 +34,7 @@ locals {
     public_subnet_names_extra  = try(local.custom_vars_parsed.public_subnet_names_extra, ["bastion"])
     private_subnet_names_extra = try(local.custom_vars_parsed.private_subnet_names_extra, [""])
     k8s_size                   = try(local.custom_vars_parsed.k8s_size, "t3.2xlarge")
-    k8s_version                = try(local.custom_vars_parsed.k8s_version, "1.31")
+    k8s_version                = try(local.custom_vars_parsed.k8s_version, "1.33")
     gcp_secrets_region         = try(local.custom_vars_parsed.gcp_secrets_region, "europe-west2")
     tags                       = try(local.custom_vars_parsed.tags, { "Deploy" = "CloudLab AWS", "Project" = "CloudLab" })
   }
