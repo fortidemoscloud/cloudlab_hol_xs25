@@ -21,3 +21,9 @@ variable "region" {
   type        = string
   default     = "europe-west2"
 }
+
+variable "prefix" {
+  description = "Resource prefix"
+  type        = string
+  default     = "xs25"
+}
