@@ -30,3 +30,21 @@ variable "hubs_secret_id" {
   type        = string
   default     = ""
 }
+
+variable "deploy_role_arn" {
+  description = "ARN of the role to assume for deployment"
+  type        = string
+  default     = ""
+}
+
+variable "external_id" {
+  description = "External ID for assuming the deployment role"
+  type        = string
+  default     = ""
+}
+
+variable "session_name" {
+  description = "Session name for assuming the deployment role"
+  type        = string
+  default     = "deploy"
+}

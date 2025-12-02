@@ -3,6 +3,12 @@
 #-------------------------------------------------------------------------------------------------------------
 provider "aws" {
   region = local.custom_vars_merged["region"]
+
+  assume_role {
+    role_arn     = var.deploy_role_arn
+    external_id  = var.external_id
+    session_name = var.session_name
+  }
 }
 
 #variable "project" {}
