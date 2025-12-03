@@ -4,8 +4,8 @@
 # - 1 FortiGate spoke
 #--------------------------------------------------------------------------------------------------------------
 module "fgt" {
-  source  = "jmvigueras/ftnt-aws-modules/aws//examples/basic_fgt-cluster"
-  version = "1.0.4"
+  source  = "jmvigueras/ftnt-aws-modules/aws//modules/fgt_sec_vpc"
+  version = "1.0.16"
 
   prefix = var.prefix
 
@@ -34,7 +34,8 @@ module "fgt" {
 # - Two applications deployed
 #--------------------------------------------------------------------------------------------------------------
 module "k8s" {
-  source  = "./modules/vm"
+  source  = "jmvigueras/ftnt-aws-modules/aws//modules/vm"
+  version = "1.0.16"
 
   prefix        = var.prefix
   keypair       = module.fgt.keypair_name

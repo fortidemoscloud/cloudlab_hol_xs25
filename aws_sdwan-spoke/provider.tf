@@ -11,10 +11,10 @@ provider "aws" {
   }
 }
 
-#variable "project" {}
+variable "project" {}
 
 provider "google" {
-  #project = var.project
+  project = var.project
   region = local.custom_vars_merged["gcp_secrets_region"]
 }
 

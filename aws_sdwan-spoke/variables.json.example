@@ -1,8 +1,10 @@
 { 
-    "custom_vars": "{\"fgt_build\": \"build2795\", \"license_type\": \"byol\", \"fortiflex_tokens\": \"[xxxx, xxxy]\"}",
+    "project": "gcp_project_name",
+    "custom_vars": "{\"fgt_build\": \"build2795\", \"license_type\": \"byol\", \"fortiflex_tokens\": \"[DAA97EXXXXXX49F9A]\"}",
     "spoke": "{\"id\": \"spoke1\", \"cidr\": \"192.168.1.0/24\"}",
-    "hubs_secret_id": "xxxx-x0c5xw-hubs",
-    "hubs": "[{\"id\": \"hub1\", \"vpn_psk\": \"xxxxxx\", \"hub_ip\": \"172.20.0.1\", \"bgp_asn\": \"65000\", \"hck_ip\": \"172.20.0.1\", \"cidr\": \"10.0.0.0/8\"}]"
+    "hubs_secret_id": "user-abcde-hubs",
+    "hubs": "[{\"id\": \"hub1\", \"vpn_psk\": \"xxxxxx\", \"hub_ip\": \"172.20.0.1\", \"bgp_asn\": \"65000\", \"hck_ip\": \"172.20.0.1\", \"cidr\": \"10.0.0.0/8\"}]",
+    "deploy_role_arn": "arn:aws:iam::<account_id>:role/<role_name>",
+    "external_id": "<your_exter_id>",
+    "session_name": "<session_name>"
 }
-
-{"fgt_build": "build2795", "license_type": "payg"}
